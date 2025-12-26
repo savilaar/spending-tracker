@@ -614,8 +614,10 @@
 
             const paymentMethods = await getSetting('paymentMethods', []);
             let paymentMethod = 'Efectivo';
+            const normalizedText = lowerText.replace(/\s+/g, '');
             for (const method of paymentMethods) {
-                if (lowerText.includes(method.toLowerCase())) {
+                const normalizedMethod = method.toLowerCase().replace(/\s+/g, '');
+                if (normalizedText.includes(normalizedMethod)) {
                     paymentMethod = method;
                     break;
                 }
