@@ -655,16 +655,31 @@
                 }
             }
 
+            const categories = await getSetting('categories', []);
             const mappings = await getSetting('mappings', {});
             let category = 'Varios';
             let originalCategory = '';
 
             const words = lowerText.split(/\s+/);
+
+            // First, check if any word matches a category name directly
             for (const word of words) {
-                if (mappings[word]) {
-                    category = mappings[word];
+                const matchedCategory = categories.find(cat => cat.toLowerCase() === word);
+                if (matchedCategory) {
+                    category = matchedCategory;
                     originalCategory = word;
                     break;
+                }
+            }
+
+            // If no category match, check keyword mappings
+            if (!originalCategory) {
+                for (const word of words) {
+                    if (mappings[word]) {
+                        category = mappings[word];
+                        originalCategory = word;
+                        break;
+                    }
                 }
             }
 
