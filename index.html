@@ -367,11 +367,11 @@
                         <span id="parsedAmount">-</span>
                     </div>
                     <div class="parsed-item">
-                        <span class="parsed-label">Método de pago:</span>
+                        <span class="parsed-label">Metodo de pago:</span>
                         <span id="parsedMethod">-</span>
                     </div>
                     <div class="parsed-item">
-                        <span class="parsed-label">Categoría:</span>
+                        <span class="parsed-label">Categoria:</span>
                         <span id="parsedCategory">-</span>
                     </div>
                     <div class="parsed-item">
@@ -390,16 +390,16 @@
 
         <div class="tab-content" id="settings">
             <div class="settings-group">
-                <h3>Métodos de Pago</h3>
+                <h3>Metodos de Pago</h3>
                 <div class="input-group">
-                    <input type="text" id="paymentMethodInput" placeholder="Ej: Efectivo, Tarjeta, Débito">
+                    <input type="text" id="paymentMethodInput" placeholder="Ej: Efectivo, Tarjeta, Debito">
                     <button class="add-button" id="addPaymentMethod">+</button>
                 </div>
                 <div id="paymentMethodsList"></div>
             </div>
 
             <div class="settings-group">
-                <h3>Categorías</h3>
+                <h3>Categorias</h3>
                 <div class="input-group">
                     <input type="text" id="categoryInput" placeholder="Ej: Supermercado, Transporte">
                     <button class="add-button" id="addCategory">+</button>
@@ -411,14 +411,14 @@
                 <h3>Mapeo de Palabras Clave</h3>
                 <div class="input-group">
                     <input type="text" id="keywordInput" placeholder="Palabra clave (Ej: carne, pan)">
-                    <input type="text" id="categoryMapInput" placeholder="Categoría">
+                    <input type="text" id="categoryMapInput" placeholder="Categoria">
                     <button class="add-button" id="addMapping">+</button>
                 </div>
                 <div id="mappingsList"></div>
             </div>
 
             <div class="version-info">
-                <div>Versión</div>
+                <div>Version</div>
                 <div class="version-badge">v1.1.3</div>
             </div>
         </div>
@@ -852,7 +852,7 @@
                 return;
             }
 
-            const headers = ['Fecha', 'Monto', 'Categoría', 'Método de Pago', 'Texto'];
+            const headers = ['Fecha', 'Monto', 'Categoria', 'Metodo de Pago', 'Texto'];
             const rows = expenses.map(e => {
                 const date = new Date(e.date).toLocaleString('es-AR');
                 return [
