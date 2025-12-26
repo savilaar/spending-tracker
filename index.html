@@ -743,7 +743,7 @@
 
             let timeoutId = setTimeout(() => {
                 recognition.stop();
-            }, 10000);
+            }, 20000);
 
             recognition.onresult = async (event) => {
                 clearTimeout(timeoutId);
