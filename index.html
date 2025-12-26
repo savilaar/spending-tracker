@@ -592,11 +592,25 @@
             setTimeout(() => toast.classList.remove('show'), 2000);
         }
 
+        function formatNumber(num) {
+            return num.toLocaleString('es-AR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
         async function parseExpense(text) {
             const lowerText = text.toLowerCase();
 
-            const amountMatch = text.match(/(\d+(?:[.,]\d+)?)/);
-            const amount = amountMatch ? parseFloat(amountMatch[1].replace(',', '.')) : null;
+            let amount = null;
+
+            const conMatch = text.match(/(\d+)\s+con\s+(\d+)/i);
+            if (conMatch) {
+                amount = parseFloat(`${conMatch[1]}.${conMatch[2]}`);
+            } else {
+                const amountMatch = text.match(/(\d+(?:[.,]\d+)?)/);
+                amount = amountMatch ? parseFloat(amountMatch[1].replace(',', '.')) : null;
+            }
 
             const paymentMethods = await getSetting('paymentMethods', []);
             let paymentMethod = 'Efectivo';
@@ -621,7 +635,7 @@
             }
 
             if (!originalCategory) {
-                originalCategory = words.filter(w => !amountMatch || !w.includes(amountMatch[1])).join(' ');
+                originalCategory = words.filter(w => !/^\d+([.,]\d+)?$/.test(w) && w !== 'con').join(' ');
             }
 
             return {
@@ -644,8 +658,9 @@
             const recognition = new SpeechRecognition();
 
             recognition.lang = 'es-AR';
-            recognition.continuous = false;
+            recognition.continuous = true;
             recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
 
             const micButton = document.getElementById('micButton');
             const transcript = document.getElementById('transcript');
@@ -654,28 +669,37 @@
             transcript.textContent = 'Escuchando...';
             transcript.classList.remove('empty');
 
+            let timeoutId = setTimeout(() => {
+                recognition.stop();
+            }, 10000);
+
             recognition.onresult = async (event) => {
+                clearTimeout(timeoutId);
                 const text = event.results[0][0].transcript;
                 transcript.textContent = text;
 
                 const parsed = await parseExpense(text);
                 currentParsedData = parsed;
 
-                document.getElementById('parsedAmount').textContent = parsed.amount ? `ARS ${parsed.amount.toFixed(2)}` : 'No detectado';
+                document.getElementById('parsedAmount').textContent = parsed.amount ? `ARS ${formatNumber(parsed.amount)}` : 'No detectado';
                 document.getElementById('parsedMethod').textContent = parsed.paymentMethod;
                 document.getElementById('parsedCategory').textContent = parsed.category;
                 document.getElementById('parsedOriginal').textContent = parsed.originalCategory;
 
                 document.getElementById('parsedInfo').classList.add('show');
                 document.getElementById('saveButton').disabled = !parsed.amount;
+
+                recognition.stop();
             };
 
             recognition.onerror = (event) => {
+                clearTimeout(timeoutId);
                 transcript.textContent = 'Error: ' + event.error;
                 micButton.classList.remove('recording');
             };
 
             recognition.onend = () => {
+                clearTimeout(timeoutId);
                 micButton.classList.remove('recording');
             };
 
@@ -735,7 +759,7 @@
                 return `
                     <div class="expense-item">
                         <div class="expense-header">
-                            <div class="expense-amount">ARS ${expense.amount.toFixed(2)}</div>
+                            <div class="expense-amount">ARS ${formatNumber(expense.amount)}</div>
                             <div class="expense-date">${dateStr}</div>
                         </div>
                         <div class="expense-details">
