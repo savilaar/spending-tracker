@@ -636,12 +636,35 @@
 
             let amount = null;
 
-            const conMatch = text.match(/(\d+)\s+con\s+(\d+)/i);
+            // Check for "X con Y" pattern (Spanish decimal: "5000 con 50" = 5000.50)
+            const conMatch = text.match(/([\d.,]+)\s+con\s+(\d+)/i);
             if (conMatch) {
-                amount = parseFloat(`${conMatch[1]}.${conMatch[2]}`);
+                // Remove all separators from integer part (handles both comma and period from different browsers)
+                const integerPart = conMatch[1].replace(/[.,]/g, '');
+                const decimalPart = conMatch[2];
+                amount = parseFloat(`${integerPart}.${decimalPart}`);
             } else {
-                const amountMatch = text.match(/(\d+(?:[.,]\d+)?)/);
-                amount = amountMatch ? parseFloat(amountMatch[1].replace(',', '.')) : null;
+                // Match numbers with optional separators
+                const amountMatch = text.match(/([\d.,]+)/);
+                if (amountMatch) {
+                    // Remove thousands separators, convert comma to period for decimal
+                    let numStr = amountMatch[1];
+                    // If there's a comma or period, assume the last one is decimal separator
+                    if (numStr.includes(',') || numStr.includes('.')) {
+                        // Count occurrences to determine which is thousands vs decimal
+                        const lastComma = numStr.lastIndexOf(',');
+                        const lastPeriod = numStr.lastIndexOf('.');
+
+                        if (lastComma > lastPeriod) {
+                            // Comma is decimal separator (Spanish format: 5.000,50)
+                            numStr = numStr.replace(/\./g, '').replace(',', '.');
+                        } else {
+                            // Period is decimal separator (English format: 5,000.50)
+                            numStr = numStr.replace(/,/g, '');
+                        }
+                    }
+                    amount = parseFloat(numStr);
+                }
             }
 
             const paymentMethods = await getSetting('paymentMethods', []);
