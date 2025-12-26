@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gastos - Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #2196F3;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: none;
+            border: none;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #2196F3;
+            border-bottom-color: #2196F3;
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .voice-section {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .mic-button {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #2196F3;
+            border: none;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .mic-button:active {
+            transform: scale(0.95);
+        }
+
+        .mic-button.recording {
+            background: #f44336;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4); }
+            50% { box-shadow: 0 4px 20px rgba(244, 67, 54, 0.8); }
+        }
+
+        .transcript {
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            min-height: 60px;
+            margin-top: 20px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .transcript.empty {
+            color: #999;
+        }
+
+        .parsed-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .parsed-info.show {
+            display: block;
+        }
+
+        .parsed-item {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .parsed-label {
+            font-weight: 600;
+            color: #1976D2;
+        }
+
+        .save-button {
+            width: 100%;
+            padding: 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .save-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .settings-group {
+            margin-bottom: 30px;
+        }
+
+        .settings-group h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .add-button, .remove-button {
+            padding: 12px 20px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .remove-button {
+            background: #f44336;
+            padding: 8px 15px;
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .mapping-item {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mapping-text {
+            font-size: 14px;
+        }
+
+        .keyword {
+            color: #666;
+        }
+
+        .arrow {
+            margin: 0 8px;
+            color: #999;
+        }
+
+        .category {
+            font-weight: 600;
+            color: #2196F3;
+        }
+
+        .expense-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .expense-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .expense-amount {
+            font-size: 20px;
+            font-weight: 700;
+            color: #f44336;
+        }
+
+        .expense-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .expense-details {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .expense-detail-row {
+            margin: 5px 0;
+        }
+
+        .export-button {
+            width: 100%;
+            padding: 15px;
+            background: #FF9800;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #323232;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💰 Gastos Tracker</h1>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="record">Grabar</button>
+            <button class="tab" data-tab="history">Historial</button>
+            <button class="tab" data-tab="settings">Ajustes</button>
+        </div>
+
+        <div class="tab-content active" id="record">
+            <div class="voice-section">
+                <button class="mic-button" id="micButton">🎤</button>
+                <div>
+                    <p style="color: #666; font-size: 14px;">Presiona el micrófono y habla</p>
+                    <p style="color: #999; font-size: 12px; margin-top: 5px;">Ej: "Carne 5000 efectivo"</p>
+                </div>
+                <div class="transcript empty" id="transcript">
+                    Esperando...
+                </div>
+                <div class="parsed-info" id="parsedInfo">
+                    <div class="parsed-item">
+                        <span class="parsed-label">Monto:</span>
+                        <span id="parsedAmount">-</span>
+                    </div>
+                    <div class="parsed-item">
+                        <span class="parsed-label">Método de pago:</span>
+                        <span id="parsedMethod">-</span>
+                    </div>
+                    <div class="parsed-item">
+                        <span class="parsed-label">Categoría:</span>
+                        <span id="parsedCategory">-</span>
+                    </div>
+                    <div class="parsed-item">
+                        <span class="parsed-label">Original:</span>
+                        <span id="parsedOriginal">-</span>
+                    </div>
+                </div>
+                <button class="save-button" id="saveButton" disabled>Guardar Gasto</button>
+            </div>
+        </div>
+
+        <div class="tab-content" id="history">
+            <div id="expenseList"></div>
+            <button class="export-button" id="exportButton">Exportar a CSV</button>
+        </div>
+
+        <div class="tab-content" id="settings">
+            <div class="settings-group">
+                <h3>Métodos de Pago</h3>
+                <div class="input-group">
+                    <input type="text" id="paymentMethodInput" placeholder="Ej: Efectivo, Tarjeta, Débito">
+                    <button class="add-button" id="addPaymentMethod">+</button>
+                </div>
+                <div id="paymentMethodsList"></div>
+            </div>
+
+            <div class="settings-group">
+                <h3>Categorías</h3>
+                <div class="input-group">
+                    <input type="text" id="categoryInput" placeholder="Ej: Supermercado, Transporte">
+                    <button class="add-button" id="addCategory">+</button>
+                </div>
+                <div id="categoriesList"></div>
+            </div>
+
+            <div class="settings-group">
+                <h3>Mapeo de Palabras Clave</h3>
+                <div class="input-group">
+                    <input type="text" id="keywordInput" placeholder="Palabra clave (Ej: carne, pan)">
+                    <input type="text" id="categoryMapInput" placeholder="Categoría">
+                    <button class="add-button" id="addMapping">+</button>
+                </div>
+                <div id="mappingsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const DB_NAME = 'ExpensesDB';
+        const DB_VERSION = 1;
+        let db;
+        let currentParsedData = null;
+
+        const defaultPaymentMethods = ['Efectivo', 'Débito', 'Crédito', 'Transferencia'];
+        const defaultCategories = ['Supermercado', 'Transporte', 'Comida', 'Servicios', 'Entretenimiento', 'Otros'];
+        const defaultMappings = {
+            'carne': 'Supermercado',
+            'pan': 'Supermercado',
+            'verdura': 'Supermercado',
+            'fruta': 'Supermercado',
+            'colectivo': 'Transporte',
+            'taxi': 'Transporte',
+            'uber': 'Transporte',
+            'luz': 'Servicios',
+            'agua': 'Servicios',
+            'gas': 'Servicios',
+            'internet': 'Servicios'
+        };
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+
+                    if (!db.objectStoreNames.contains('expenses')) {
+                        db.createObjectStore('expenses', { keyPath: 'id', autoIncrement: true });
+                    }
+
+                    if (!db.objectStoreNames.contains('settings')) {
+                        db.createObjectStore('settings', { keyPath: 'key' });
+                    }
+                };
+            });
+        }
+
+        function getSetting(key, defaultValue) {
+            return new Promise((resolve) => {
+                const transaction = db.transaction(['settings'], 'readonly');
+                const store = transaction.objectStore('settings');
+                const request = store.get(key);
+
+                request.onsuccess = () => {
+                    resolve(request.result ? request.result.value : defaultValue);
+                };
+                request.onerror = () => resolve(defaultValue);
+            });
+        }
+
+        function setSetting(key, value) {
+            return new Promise((resolve) => {
+                const transaction = db.transaction(['settings'], 'readwrite');
+                const store = transaction.objectStore('settings');
+                store.put({ key, value });
+                transaction.oncomplete = () => resolve();
+            });
+        }
+
+        async function initSettings() {
+            const paymentMethods = await getSetting('paymentMethods', defaultPaymentMethods);
+            const categories = await getSetting('categories', defaultCategories);
+            const mappings = await getSetting('mappings', defaultMappings);
+
+            await setSetting('paymentMethods', paymentMethods);
+            await setSetting('categories', categories);
+            await setSetting('mappings', mappings);
+
+            renderPaymentMethods();
+            renderCategories();
+            renderMappings();
+        }
+
+        async function renderPaymentMethods() {
+            const methods = await getSetting('paymentMethods', []);
+            const list = document.getElementById('paymentMethodsList');
+            list.innerHTML = methods.map(method => `
+                <div class="list-item">
+                    <span>${method}</span>
+                    <button class="remove-button" onclick="removePaymentMethod('${method}')">✕</button>
+                </div>
+            `).join('');
+        }
+
+        async function renderCategories() {
+            const categories = await getSetting('categories', []);
+            const list = document.getElementById('categoriesList');
+            list.innerHTML = categories.map(category => `
+                <div class="list-item">
+                    <span>${category}</span>
+                    <button class="remove-button" onclick="removeCategory('${category}')">✕</button>
+                </div>
+            `).join('');
+        }
+
+        async function renderMappings() {
+            const mappings = await getSetting('mappings', {});
+            const list = document.getElementById('mappingsList');
+            list.innerHTML = Object.entries(mappings).map(([keyword, category]) => `
+                <div class="mapping-item">
+                    <span class="mapping-text">
+                        <span class="keyword">${keyword}</span>
+                        <span class="arrow">→</span>
+                        <span class="category">${category}</span>
+                    </span>
+                    <button class="remove-button" onclick="removeMapping('${keyword}')">✕</button>
+                </div>
+            `).join('');
+        }
+
+        async function addPaymentMethod() {
+            const input = document.getElementById('paymentMethodInput');
+            const method = input.value.trim();
+            if (!method) return;
+
+            const methods = await getSetting('paymentMethods', []);
+            if (!methods.includes(method)) {
+                methods.push(method);
+                await setSetting('paymentMethods', methods);
+                renderPaymentMethods();
+            }
+            input.value = '';
+            showToast('Método agregado');
+        }
+
+        async function removePaymentMethod(method) {
+            const methods = await getSetting('paymentMethods', []);
+            const filtered = methods.filter(m => m !== method);
+            await setSetting('paymentMethods', filtered);
+            renderPaymentMethods();
+            showToast('Método eliminado');
+        }
+
+        async function addCategory() {
+            const input = document.getElementById('categoryInput');
+            const category = input.value.trim();
+            if (!category) return;
+
+            const categories = await getSetting('categories', []);
+            if (!categories.includes(category)) {
+                categories.push(category);
+                await setSetting('categories', categories);
+                renderCategories();
+            }
+            input.value = '';
+            showToast('Categoría agregada');
+        }
+
+        async function removeCategory(category) {
+            const categories = await getSetting('categories', []);
+            const filtered = categories.filter(c => c !== category);
+            await setSetting('categories', filtered);
+            renderCategories();
+            showToast('Categoría eliminada');
+        }
+
+        async function addMapping() {
+            const keywordInput = document.getElementById('keywordInput');
+            const categoryInput = document.getElementById('categoryMapInput');
+            const keyword = keywordInput.value.trim().toLowerCase();
+            const category = categoryInput.value.trim();
+
+            if (!keyword || !category) return;
+
+            const mappings = await getSetting('mappings', {});
+            mappings[keyword] = category;
+            await setSetting('mappings', mappings);
+            renderMappings();
+
+            keywordInput.value = '';
+            categoryInput.value = '';
+            showToast('Mapeo agregado');
+        }
+
+        async function removeMapping(keyword) {
+            const mappings = await getSetting('mappings', {});
+            delete mappings[keyword];
+            await setSetting('mappings', mappings);
+            renderMappings();
+            showToast('Mapeo eliminado');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        async function parseExpense(text) {
+            const lowerText = text.toLowerCase();
+
+            const amountMatch = text.match(/(\d+(?:[.,]\d+)?)/);
+            const amount = amountMatch ? parseFloat(amountMatch[1].replace(',', '.')) : null;
+
+            const paymentMethods = await getSetting('paymentMethods', []);
+            let paymentMethod = 'Efectivo';
+            for (const method of paymentMethods) {
+                if (lowerText.includes(method.toLowerCase())) {
+                    paymentMethod = method;
+                    break;
+                }
+            }
+
+            const mappings = await getSetting('mappings', {});
+            let category = 'Otros';
+            let originalCategory = '';
+
+            const words = lowerText.split(/\s+/);
+            for (const word of words) {
+                if (mappings[word]) {
+                    category = mappings[word];
+                    originalCategory = word;
+                    break;
+                }
+            }
+
+            if (!originalCategory) {
+                originalCategory = words.filter(w => !amountMatch || !w.includes(amountMatch[1])).join(' ');
+            }
+
+            return {
+                amount,
+                paymentMethod,
+                category,
+                originalCategory,
+                rawText: text,
+                date: new Date()
+            };
+        }
+
+        function startRecording() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showToast('Tu navegador no soporta reconocimiento de voz');
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+
+            recognition.lang = 'es-AR';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            const micButton = document.getElementById('micButton');
+            const transcript = document.getElementById('transcript');
+
+            micButton.classList.add('recording');
+            transcript.textContent = 'Escuchando...';
+            transcript.classList.remove('empty');
+
+            recognition.onresult = async (event) => {
+                const text = event.results[0][0].transcript;
+                transcript.textContent = text;
+
+                const parsed = await parseExpense(text);
+                currentParsedData = parsed;
+
+                document.getElementById('parsedAmount').textContent = parsed.amount ? `ARS ${parsed.amount.toFixed(2)}` : 'No detectado';
+                document.getElementById('parsedMethod').textContent = parsed.paymentMethod;
+                document.getElementById('parsedCategory').textContent = parsed.category;
+                document.getElementById('parsedOriginal').textContent = parsed.originalCategory;
+
+                document.getElementById('parsedInfo').classList.add('show');
+                document.getElementById('saveButton').disabled = !parsed.amount;
+            };
+
+            recognition.onerror = (event) => {
+                transcript.textContent = 'Error: ' + event.error;
+                micButton.classList.remove('recording');
+            };
+
+            recognition.onend = () => {
+                micButton.classList.remove('recording');
+            };
+
+            recognition.start();
+        }
+
+        async function saveExpense() {
+            if (!currentParsedData || !currentParsedData.amount) return;
+
+            const transaction = db.transaction(['expenses'], 'readwrite');
+            const store = transaction.objectStore('expenses');
+            store.add(currentParsedData);
+
+            transaction.oncomplete = () => {
+                showToast('Gasto guardado');
+                document.getElementById('transcript').textContent = 'Esperando...';
+                document.getElementById('transcript').classList.add('empty');
+                document.getElementById('parsedInfo').classList.remove('show');
+                document.getElementById('saveButton').disabled = true;
+                currentParsedData = null;
+            };
+        }
+
+        async function loadExpenses() {
+            return new Promise((resolve) => {
+                const transaction = db.transaction(['expenses'], 'readonly');
+                const store = transaction.objectStore('expenses');
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    resolve(request.result || []);
+                };
+            });
+        }
+
+        async function renderExpenses() {
+            const expenses = await loadExpenses();
+            const list = document.getElementById('expenseList');
+
+            if (expenses.length === 0) {
+                list.innerHTML = '<div class="empty-state">No hay gastos registrados</div>';
+                return;
+            }
+
+            expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            list.innerHTML = expenses.map(expense => {
+                const date = new Date(expense.date);
+                const dateStr = date.toLocaleDateString('es-AR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                return `
+                    <div class="expense-item">
+                        <div class="expense-header">
+                            <div class="expense-amount">ARS ${expense.amount.toFixed(2)}</div>
+                            <div class="expense-date">${dateStr}</div>
+                        </div>
+                        <div class="expense-details">
+                            <div class="expense-detail-row">📁 ${expense.category}</div>
+                            <div class="expense-detail-row">💳 ${expense.paymentMethod}</div>
+                            <div class="expense-detail-row" style="color: #999;">📝 "${expense.originalCategory}"</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function exportToCSV() {
+            const expenses = await loadExpenses();
+
+            if (expenses.length === 0) {
+                showToast('No hay gastos para exportar');
+                return;
+            }
+
+            const headers = ['Fecha', 'Monto', 'Categoría', 'Método de Pago', 'Original', 'Texto'];
+            const rows = expenses.map(e => {
+                const date = new Date(e.date).toLocaleString('es-AR');
+                return [
+                    date,
+                    e.amount,
+                    e.category,
+                    e.paymentMethod,
+                    e.originalCategory,
+                    e.rawText
+                ];
+            });
+
+            const csv = [headers, ...rows].map(row =>
+                row.map(cell => `"${cell}"`).join(',')
+            ).join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `gastos_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+
+            showToast('Exportado correctamente');
+        }
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', async () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+
+                if (tab.dataset.tab === 'history') {
+                    await renderExpenses();
+                }
+            });
+        });
+
+        document.getElementById('micButton').addEventListener('click', startRecording);
+        document.getElementById('saveButton').addEventListener('click', saveExpense);
+        document.getElementById('addPaymentMethod').addEventListener('click', addPaymentMethod);
+        document.getElementById('addCategory').addEventListener('click', addCategory);
+        document.getElementById('addMapping').addEventListener('click', addMapping);
+        document.getElementById('exportButton').addEventListener('click', exportToCSV);
+
+        document.getElementById('paymentMethodInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addPaymentMethod();
+        });
+
+        document.getElementById('categoryInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addCategory();
+        });
+
+        initDB().then(initSettings);
+    </script>
+</body>
+</html>
